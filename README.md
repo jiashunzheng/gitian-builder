@@ -1,3 +1,8 @@
+# Modify to compile timecoin.
+Tested the compilation of windows exe on a debian 8.5 as host machine and ubuntu precise as vm in gitian-builder
+
+
+
 # Gitian
 
 Read about the project goals at the [project home page](https://gitian.org/).
