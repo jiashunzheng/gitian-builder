@@ -1,6 +1,100 @@
 # Modify to compile timecoin.
 Tested the compilation of windows exe on a debian 8.5 as host machine and ubuntu precise as vm in gitian-builder
 
+Follow the steps [here](https://codeclimate.com/github/shadowproject/shadow/contrib/gitian-descriptors/README/source) up to the point of setting up debian environment:
+```
+apt-get install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc python-cheetah parted kpartx bridge-utils
+adduser debian sudo
+
+# make sure the build script can exectute it without providing a password
+echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc
+# add cgroup for LXC
+echo "cgroup  /sys/fs/cgroup  cgroup  defaults  0   0" >> /etc/fstab
+# make /etc/rc.local script that sets up bridge between guest and host
+echo '#!/bin/sh -e' > /etc/rc.local
+echo 'brctl addbr br0' >> /etc/rc.local
+echo 'ifconfig br0 10.0.3.2/24 up' >> /etc/rc.local
+echo 'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' >> /etc/rc.local
+echo 'echo 1 > /proc/sys/net/ipv4/ip_forward' >> /etc/rc.local
+echo 'exit 0' >> /etc/rc.local
+
+# make sure that USE_LXC is always set when logging in as debian,
+# and configure LXC IP addresses
+echo 'export USE_LXC=1' >> /home/debian/.profile
+echo 'export GITIAN_HOST_IP=10.0.3.2' >> /home/debian/.profile
+echo 'export LXC_GUEST_IP=10.0.3.5' >> /home/debian/.profile
+echo 'export LXC_EXECUTE=lxc-execute; PATH="$HOME/gitian-builder/libexec/:$PATH"' >> /home/debian/.profile
+
+```
+
+here is the content of /etc/rc.local
+
+```
+#!/bin/sh -e
+brctl addbr br0
+ifconfig br0 10.0.3.2/24 up
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+echo 1 > /proc/sys/net/ipv4/ip_forward
+exit 0
+debian@debian:~$ echo 'echo 1 > /proc/sys/net/ipv4/ip_forward'
+echo 1 > /proc/sys/net/ipv4/ip_forward
+```
+
+the end of /home/debian/.profile should looks like after executing the code above
+```
+export USE_LXC=1
+export GITIAN_HOST_IP=10.0.3.2
+export LXC_GUEST_IP=10.0.3.5
+
+export LXC_EXECUTE=lxc-execute; PATH="$HOME/gitian-builder/libexec/:$PATH";
+```
+
+# Compilation to exe for Windows
+
+1. wget all the dependent packages into the input
+```
+cd input;
+wget http://download.icu-project.org/files/icu4c/55.1/icu4c-55_1-src.tgz;
+wget http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz;
+wget http://download.qt.io/official_releases/qt/5.5/5.5.0/single/qt-everywhere-opensource-src-5.5.0.tar.xz
+wget http://liquidtelecom.dl.sourceforge.net/project/flex/flex-2.5.38.tar.gz;
+wget http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20140401.tar.
+gz
+wget http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20151008.tar.
+gz
+wget https://ftp.openssl.org/source/old/1.0.1/openssl-1.0.1k.tar.gz
+wget https://fukuchi.org/works/qrencode/qrencode-3.4.3.tar.bz2
+wget http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/download
+wget https://zlib.net/fossils/zlib-1.2.8.tar.gz
+wget http://wtogami.fedorapeople.org/boost-mingw-gas-cross-compile-2013-03-03.patch;
+wget http://www.openssl.org/source/openssl-1.0.2d.tar.gz;
+```
+
+2. clone the source code
+```
+cd ~/
+git clone git@github.com:jiashunzheng/timecoin.git
+``` 
+
+3. 
+```
+cd gitian-builder/
+./bin/make-base-vm --lxc --arch amd64 --suite precise
+./bin/make-base-vm --lxc --arch i386 --suite precise
+./bin/gbuild ../timecoin/contrib/gitian-descriptors/boost-win32.yml 
+cp build/out/boost-win32-1.55.0-gitian-r6.zip ../../inputs/
+./bin/gbuild ../timecoin/contrib/gitian-descriptors/deps-win32.yml 
+cp build/out/bitcoin08-deps-win32-gitian-r13.zip ../../inputs/
+./bin/gbuild ../timecoin/contrib/gitian-descriptors/qt-win32.yml 
+cp build/out/qt-win32-4.8.5-gitian-r8.zip inputs/
+
+#编译exe
+./bin/gbuild --commit timecoin=v2.3 ../timecoin/contrib/gitian-descriptor
+s/gitian-win32.yml 
+
+```
+最终编译后的exe在build/out目录下
+
 
 
 # Gitian
