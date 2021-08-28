@@ -36,8 +36,6 @@ ifconfig br0 10.0.3.2/24 up
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 echo 1 > /proc/sys/net/ipv4/ip_forward
 exit 0
-debian@debian:~$ echo 'echo 1 > /proc/sys/net/ipv4/ip_forward'
-echo 1 > /proc/sys/net/ipv4/ip_forward
 ```
 
 the end of /home/debian/.profile should looks like after executing the code above
