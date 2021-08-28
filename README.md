@@ -1,5 +1,5 @@
 # Modify to compile timecoin.
-Tested the compilation of windows exe on a debian 8.5 as host machine and ubuntu precise as vm in gitian-builder
+Tested the compilation of windows exe on a [debian 8.5](https://cdimage.debian.org/cdimage/blends-live/current/amd64/iso-hybrid/debian-live-8.5.0-amd64-hamradio.iso) as host machine and ubuntu precise as vm in gitian-builder
 
 Follow the steps [here](https://codeclimate.com/github/shadowproject/shadow/contrib/gitian-descriptors/README/source) up to the point of setting up debian environment:
 ```
@@ -46,6 +46,8 @@ export LXC_GUEST_IP=10.0.3.5
 
 export LXC_EXECUTE=lxc-execute; PATH="$HOME/gitian-builder/libexec/:$PATH";
 ```
+
+Reboot the debian virtual machine. 
 
 # Compilation to exe for Windows
 
